@@ -34,7 +34,11 @@ def save_merges(merges: List[Tuple[bytes, bytes]], merges_path: str):
 
 def main():
     #-------------------- P1.6b: YOUR CODE HERE ----------------------
-    raise NotImplementedError
+    path = "src/fixtures/text/NPT-en.txt"
+    qwen_pattern = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}" \
+                   r"| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
+
+    vocab, merges = train_bpe(path ,2000, qwen_pattern)
     #-----------------------------------------------------------------
 
     output_vocab_path = "NPT_vocab.json"

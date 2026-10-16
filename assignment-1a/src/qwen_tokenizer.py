@@ -1,8 +1,8 @@
 import os
 import json
-from .tokenizer import BPETokenizer
+from tokenizer import BPETokenizer
 from functools import lru_cache
-from .common import FIXTURES_PATH
+from common import FIXTURES_PATH
 
 @lru_cache
 def gpt2_bytes_to_unicode() -> dict[int, str]:
@@ -86,7 +86,10 @@ def load_qwen_tokenizer_from_dir() -> BPETokenizer:
     vocab, merges = load_qwen_vocab_and_merges()
     
     #-------------------- P1.5: YOUR CODE HERE ----------------------
-    raise NotImplementedError
+    qwen_pattern = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}" \
+                   r"| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
+
+    return BPETokenizer(qwen_pattern, vocab, merges)
     #----------------------------------------------------------------
 
 
@@ -100,7 +103,10 @@ def encode_file_with_qwen_tokenizer(
     tokenizer = load_qwen_tokenizer_from_dir()
 
     #-------------------- P1.5: YOUR CODE HERE ----------------------
-    raise NotImplementedError
+    with open(input_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    
+    return tokenizer.encode(text)
     #----------------------------------------------------------------
 
 
@@ -113,5 +119,28 @@ def decode_sequence_with_qwen_tokenizer(
     tokenizer = load_qwen_tokenizer_from_dir()
 
     #-------------------- P1.5: YOUR CODE HERE ----------------------
-    raise NotImplementedError
+    return tokenizer.decode(token_ids)
     #----------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    input_path_l =  ["fixtures/text/NPT-cn.txt", "fixtures/text/NPT-en.txt", "fixtures/text/NPT-fr.txt"]
+    text_l = []
+    for path in input_path_l:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+            text_l.append(len(text.encode('utf-8')))
+    
+    encoding_l = [len(encode_file_with_qwen_tokenizer(path)) for path in input_path_l]
+    print(text_l, encoding_l, [text_l[idx]/encoding_l[idx] for idx in range(len(input_path_l))])
+
+    tokenizer = load_qwen_tokenizer_from_dir()
+    problem_1_5_c = [[], [], [], []]
+    for n in range(1, 30):
+        problem_1_5_c[0].append(len(tokenizer.encode('哈'*n)))
+        problem_1_5_c[1].append(len(tokenizer.encode(('不容易' * 1000)[:n])))
+        problem_1_5_c[2].append(len(tokenizer.encode('5'*n)))
+        problem_1_5_c[3].append(len(tokenizer.encode('\n'*n)))
+    
+    for _ in problem_1_5_c:
+        print(_)
