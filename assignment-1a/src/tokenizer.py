@@ -212,3 +212,88 @@ def train_bpe(
     return vocab, merges
 
     #-----------------------------------------------------------------
+
+# def train_bpe(
+#     corpus: str,
+#     vocab_size: int,
+#     pattern: str,
+# ) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
+#     """Given the path to an input corpus, run train a BPE tokenizer and
+#     output its vocabulary and merges.
+
+#     Args:
+#         corpus (str): Path to BPE tokenizer training data.
+#         vocab_size (int): Total number of items in the tokenizer's vocabulary.
+#         pattern (str): A regex pattern to pre-tokenize the input text.
+
+#     Returns:
+#         tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
+#             vocab:
+#                 The trained tokenizer vocabulary, a mapping from int (token ID in the vocabulary)
+#                 to bytes (token bytes)
+#             merges:
+#                 BPE merges. Each list item is a tuple of bytes (<token1>, <token2>),
+#                 representing that <token1> was merged with <token2>.
+#                 Merges are ordered by order of creation.
+#     """
+
+# #-------------------- P1.6a: YOUR CODE HERE ----------------------
+#     with open(corpus, "r", encoding="utf-8") as f:
+#         text = f.read()
+#     pretokens = regex.findall(pattern, text)
+#     encodings = [[bytes([b]) for b in pretoken.encode('utf-8')] for pretoken in pretokens]
+
+#     vocab = {b : bytes([b]) for b in range(256)}
+#     merges = []
+
+#     if len(vocab) >= vocab_size:    return vocab, merges
+
+#     pair = {}
+#     offset = [[] for _ in range(len(encodings))]
+
+#     def update_pair(pair, p1, p2, pidx, idx):
+
+#         if (p1, p2) in pair:
+#             pair[(p1, p2)].append([pidx, idx])
+#         else:
+#             pair[(p1, p2)] = [[pidx, idx]]
+
+#         return pair 
+
+#     for pidx, pretoken in enumerate(encodings):
+#         for idx in range(len(pretoken)-1):
+#             pair = update_pair(pair, pretoken[idx], pretoken[idx+1], pidx, idx)
+
+#     def relative2absolute(off, idx):
+#         for _ in range(len(off)):
+#             if off[_] - _ - 1 > idx:
+#                 return idx + _
+
+#     def absolute2relative(off, idx):
+#         k = 0
+#         for _ in off: 
+#             if _ < idx: k += 1
+#         return idx - k
+
+#     while len(vocab) < vocab_size:
+#         best_pair = max(pair, key=lambda p: (len(pair[p]), p))
+#         merges.append(best_pair)
+#         vocab[len(vocab)] = best_pair[0] + best_pair[1]
+
+#         for pidx, idx in pair[best_pair]:
+#             relative_idx = absolute2relative(offset[pidx], idx)
+
+#             if relative_idx != 0:
+#                 pair[(encodings[pidx][relative_idx-1], best_pair[0])].remove([pidx, relative2absolute(offset[pidx],relative_idx-1)])
+#                 pair = update_pair(pair, encodings[pidx][relative_idx-1], best_pair[0]+best_pair[1], pidx, relative2absolute(offset[pidx], relative_idx-1))
+
+#             if relative_idx < len(encodings[pidx])-2:
+#                 pair[(best_pair[1], encodings[pidx][relative_idx+2])].remove([pidx, relative2absolute(offset[pidx],relative_idx+2)])
+#                 pair = update_pair(pair, best_pair[0]+best_pair[1], encodings[pidx][relative_idx+2], pidx, relative2absolute(offset[pidx],relative_idx+2))
+
+#             encodings[pidx][relative_idx] = best_pair[0] + best_pair[1]
+#             encodings[pidx][relative_idx].pop(relative_idx+1)
+#             offset[pidx].append(idx + len(best_pair[0]))
+#             offset[pidx].sort()
+
+#     return vocab, merges
